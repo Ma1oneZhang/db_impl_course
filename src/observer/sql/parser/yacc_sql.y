@@ -81,6 +81,7 @@ ParserContext *get_context(yyscan_t scanner)
         TRX_COMMIT
         TRX_ROLLBACK
         INT_T
+	DATE_T
         STRING_T
         FLOAT_T
         HELP
@@ -110,11 +111,11 @@ ParserContext *get_context(yyscan_t scanner)
   char *string;
   int number;
   float floats;
-	char *position;
+  char *position;
 }
 
 %token <number> NUMBER
-%token <floats> FLOAT 
+%token <floats> FLOAT
 %token <string> ID
 %token <string> PATH
 %token <string> SSS
@@ -266,6 +267,7 @@ number:
 		;
 type:
 	INT_T { $$=INTS; }
+	| DATE_T { $$=DATES; }
        | STRING_T { $$=CHARS; }
        | FLOAT_T { $$=FLOATS; }
        ;

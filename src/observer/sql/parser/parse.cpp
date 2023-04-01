@@ -54,9 +54,60 @@ void value_init_float(Value *value, float v)
 }
 void value_init_string(Value *value, const char *v)
 {
+	if(!value_init_date(value, v)){
+		return;
+	}
   value->type = CHARS;
   value->data = strdup(v);
 }
+bool check_date(int year, int month, int day){
+// check year
+	if (year < 1 || year > 9999) {
+		return false;
+	}
+	// check month
+	if (month < 1 || month > 12) {
+		return false;
+	}
+	// check day
+	if (day < 1 || day > 31) {
+		return false;
+	}
+	// handle February separately for leap year
+	if (month == 2) {
+		if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
+			if (day > 29) {
+				return false;
+			}
+		} else {
+			if (day > 28) {
+				return false;
+			}
+		}
+	}
+	// handle months with 30 days
+	if (month == 4 || month == 6 || month == 9 || month == 11) {
+		if (day > 30) {
+			return false;
+		}
+	}
+	// date is valid
+	return true;
+}
+int value_init_date(Value *value, const char *v){
+	value->type = DATES;
+	value->data = malloc(sizeof(int));
+	int y, m, d;
+	if(sscanf(v, "%d-%d-%d", &y, &m, &d) != 3){
+		return -1;
+	}
+	bool b = check_date(y, m, d);
+	if(!b) return -1;
+	int date = y * 10000 + m * 100 + d;
+	memcpy(value->data, &date, sizeof date);
+	return 0;
+}
+
 void value_destroy(Value *value)
 {
   value->type = UNDEFINED;

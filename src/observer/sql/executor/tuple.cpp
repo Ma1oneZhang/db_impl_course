@@ -255,6 +255,13 @@ void TupleRecordConverter::add_record(const char *record)
         const char *s = record + field_meta->offset();  // 现在当做Cstring来处理
         tuple.add(s, strlen(s));
       } break;
+			case DATES: {
+				int value = *(int *)(record + field_meta->offset());
+				// display as yyyy-mm-dd
+				auto str = reinterpret_cast<char *>(malloc(sizeof(char) * 16));
+				sprintf(str, "%d-%d-%d", value / 10000, (value % 10000) / 100, value % 100);
+				tuple.add(str, strlen(str));
+			}
       default: {
         LOG_PANIC("Unsupported field type. type=%d", field_meta->type());
       }
