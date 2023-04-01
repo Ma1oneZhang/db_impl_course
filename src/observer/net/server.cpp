@@ -242,6 +242,7 @@ void Server::accept(int fd, short ev, void *arg)
     // unix socket不支持设置NODELAY
     int yes = 1;
     ret = setsockopt(client_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
+//    ret = setsockopt(client_fd, IPPROTO_TCP,SO_REUSEPORT, &yes, sizeof(yes));
     if (ret < 0) {
       LOG_ERROR("Failed to set socket of %s option as : TCP_NODELAY %s\n", addr_str.c_str(), strerror(errno));
       ::close(client_fd);

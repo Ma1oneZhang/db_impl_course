@@ -30,7 +30,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 
 #define MAX_MEM_BUFFER_SIZE 8192
-#define PORT_DEFAULT 6789
+#define PORT_DEFAULT 60000
 
 using namespace common;
 

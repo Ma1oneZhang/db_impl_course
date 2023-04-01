@@ -125,14 +125,28 @@ RC Table::destroy(const char* dir) {
   //刷新所有脏页
   RC rc = sync();
   if(rc != RC::SUCCESS) return rc;
-
-  //TODO 删除描述表元数据的文件
-
-  //TODO 删除表数据文件
-
-  //TODO 清理所有的索引相关文件数据与索引元数据
-
-  return RC::GENERIC_ERROR;
+  std::string current = getcwd(nullptr, 0);
+  // 删除描述表元数据的文件
+  auto meta_file_name = table_meta_file(dir, this->name());
+  if (remove((current + "/" + meta_file_name).c_str()) != 0){
+      LOG_ERROR("IOERR IN DELETE OPERATION");
+      return RC::IOERR;
+  }
+  // 删除表数据文件
+  auto data_file_name = table_data_file(dir, this->name());
+  if(remove((current + "/" + data_file_name).c_str()) != 0){
+      LOG_ERROR("IOERR IN DELETE OPERATION");
+      return RC::IOERR;
+  }
+  // 清理所有的索引相关文件数据与索引元数据
+  for(auto i = 0;i < table_meta_.index_num();i ++){
+    auto index_file_name = table_index_file(dir, this->name(), table_meta_.index(i)->name());
+    if(remove((current.append("/").append(index_file_name)).c_str()) != 0){
+        LOG_ERROR("IOERR IN DELETE OPERATION");
+        return RC::IOERR_ACCESS;
+    }
+  }
+  return RC::SUCCESS;
 }
 
 

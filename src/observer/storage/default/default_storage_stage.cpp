@@ -12,7 +12,7 @@ See the Mulan PSL v2 for more details. */
 // Created by Meiyi & Longda on 2021/4/13.
 //
 
-#include <string.h>
+#include <cstring>
 #include <string>
 
 #include "storage/default/default_storage_stage.h"
@@ -57,7 +57,7 @@ DefaultStorageStage::~DefaultStorageStage()
 //! Parse properties, instantiate a stage object
 Stage *DefaultStorageStage::make_stage(const std::string &tag)
 {
-  DefaultStorageStage *stage = new (std::nothrow) DefaultStorageStage(tag.c_str());
+  auto *stage = new (std::nothrow) DefaultStorageStage(tag.c_str());
   if (stage == nullptr) {
     LOG_ERROR("new DefaultStorageStage failed");
     return nullptr;
@@ -73,7 +73,7 @@ bool DefaultStorageStage::set_properties()
   std::map<std::string, std::string> section = get_properties()->get(stageNameStr);
 
   // 初始化时打开默认的database，没有的话会自动创建
-  std::map<std::string, std::string>::iterator iter = section.find(CONF_BASE_DIR);
+  auto iter = section.find(CONF_BASE_DIR);
   if (iter == section.end()) {
     LOG_ERROR("Config cannot be empty: %s", CONF_BASE_DIR);
     return false;
@@ -143,8 +143,8 @@ void DefaultStorageStage::handle_event(StageEvent *event)
   LOG_TRACE("Enter\n");
   TimerStat timerStat(*query_metric_);
 
-  StorageEvent *storage_event = static_cast<StorageEvent *>(event);
-  CompletionCallback *cb = new (std::nothrow) CompletionCallback(this, nullptr);
+  auto *storage_event = static_cast<StorageEvent *>(event);
+  auto *cb = new (std::nothrow) CompletionCallback(this, nullptr);
   if (cb == nullptr) {
     LOG_ERROR("Failed to new callback for SessionEvent");
     storage_event->done_immediate();
@@ -202,13 +202,13 @@ void DefaultStorageStage::handle_event(StageEvent *event)
     } break;
 
     case SCF_DROP_TABLE: {
-
       // TODO: 拿到要 drop 的表
-
+        const DropTable &drop_tale = sql->sstr.drop_table;
+        const char* table_name = drop_tale.relation_name;
       // TODO: 调用drop_table接口，drop_table 要在 handler_ 中实现
-
+        rc = handler_->drop_table(current_db, table_name);
       // TODO: 返回结果，带不带换行符都可以
-
+        snprintf(response, sizeof(response), "%s\n", rc == RC::SUCCESS ? "SUCCESS" : "FAILURE");
     }break;
 
     case SCF_CREATE_INDEX: {
