@@ -55,7 +55,19 @@ namespace cache {
            *    2.1 如果lru cache已经达到最大容量，则返回RC::BUFFERPOOL_NOBUF
            *    2.2 如果没有达到最大容量，则在_cache_items_list和_cache_items_map中插入新的
            */
-
+					if(_cache_items_map.count(key)){
+						// exist
+						_cache_items_list.erase(_cache_items_map[key]);
+						_cache_items_map.erase(key);
+						_cache_items_list.insert(_cache_items_list.begin(), {key, value});
+						_cache_items_map[key] = _cache_items_list.begin();
+						return RC::SUCCESS;
+					}
+					if(_cache_items_list.size() == _max_size){
+						return RC::BUFFERPOOL_NOBUF;
+					}
+					_cache_items_list.insert(_cache_items_list.begin(), {key, value});
+					_cache_items_map[key] = _cache_items_list.begin();
           return RC::SUCCESS;
         }
 
@@ -66,8 +78,12 @@ namespace cache {
            * 2. 如果页存在，将key对应的key-value对移动到_cache_items_list的头部，并更新_cache_items_map
            *    将res_value设置为结果value。返回RC::SUCCESS
            */
-
-          return RC::SUCCESS;
+					if(_cache_items_map.count(key)){
+						*res_value = _cache_items_map[key]->second;
+						_cache_items_list.erase(_cache_items_map[key]);
+						_cache_items_list.insert(_cache_items_list.begin(), {key, *res_value});
+						return RC::SUCCESS;
+					}else return RC::NOTFOUND;
         }
 
         bool exists(const key_t& key) const {
@@ -76,8 +92,7 @@ namespace cache {
            * key存在，返回 true
            * key不存在，返回 false
            */
-
-          return false;
+          return _cache_items_map.count(key);
         }
 
         size_t size() const {
@@ -86,11 +101,10 @@ namespace cache {
            * 返回LRU cache size
            */
           
-          return 0;
+          return _cache_items_list.size();
         }
 
         RC getVictim(key_t *vic_key, bool (*check)(const key_value_pair_t& kv, void *ctx), void *ctx) const {
-          
           for (auto it = _cache_items_list.rbegin(); it != _cache_items_list.rend(); it++) {
             if (check(*it, ctx)) {
               /**
@@ -99,6 +113,8 @@ namespace cache {
                * 被驱逐的项目应该满足check条件，check条件一般是: frame的Pin count为0.
                * 2. 返回 RC::SUCCESS
                */
+               *vic_key = it->first;
+               return RC::SUCCESS;
             }
           }
           return RC::NOTFOUND;
@@ -113,7 +129,15 @@ namespace cache {
            * 
            * 比如old_key是4，它的value是40, new_key是5，则删除{4, 40}，建立{5, 40}
            */
-          
+					if(!exists(old_key))
+						return RC::NOTFOUND;
+
+					auto value = _cache_items_map[old_key]->second;
+					_cache_items_list.erase(_cache_items_map[old_key]);
+					_cache_items_map.erase(old_key);
+
+					_cache_items_list.insert(_cache_items_list.begin(), {new_key, value});
+					_cache_items_map[new_key] = _cache_items_list.begin();
           return RC::SUCCESS;
         }
 

@@ -120,8 +120,12 @@ class BPManager {
      * 1. 如果lru cache中存在这个页，则将它返回
      * 2. 如果lru cache中不存在这个页，则返回nullptr
      */
-    
-    return nullptr;
+		int page_id = 0;
+    auto res = lrucache.get({file_desc, page_num}, &page_id);
+		if(res != RC::SUCCESS){
+			return nullptr;
+		}
+    return &frame[page_id];
   }
 
   Frame *getFrame() {
@@ -129,8 +133,7 @@ class BPManager {
      * @todo
      * 返回frame数组
      */
-
-    return nullptr;
+    return frame;
   }
 
   bool *getAllocated() {
@@ -138,8 +141,7 @@ class BPManager {
      * @todo
      * 返回allocated数组
      */
-
-    return nullptr;
+    return allocated;
   }
   
   void printLruCache();
@@ -230,6 +232,7 @@ class DiskBufferPool {
   RC pin_page(BPPageHandle *page_handle) {
     page_handle->open = true;
     page_handle->frame->pin_count++;
+		return RC::SUCCESS;
   }
 
   /**
